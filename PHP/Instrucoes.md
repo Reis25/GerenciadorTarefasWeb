@@ -1,6 +1,6 @@
 # Desenvovolvimento de sistemas 
 
-Repositório  para revisão dos principais conceitos de desenvolvimento de sistema. Usando as stack de desenvolvimento: HTML, CSS, PHP, SQL e MySQL. 
+Repositório  para sistema de gerenciamento de tarefas. Usando as stack de desenvolvimento: HTML, CSS, PHP, SQL e MySQL. 
 
 O sistema operacional para a construção da aplicação foi o Linux-Ubuntu 18.04. 
 
