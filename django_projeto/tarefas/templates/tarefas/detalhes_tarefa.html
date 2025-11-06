@@ -1,0 +1,162 @@
+{% extends 'tarefas/base.html' %}
+
+{% block title %}{{ tarefa.titulo }} - Gerenciador de Tarefas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Detalhes da Tarefa -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ tarefa.titulo }}</h4>
+                    <div>
+                        <a href="{% url 'editar_tarefa' tarefa.pk %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'deletar_tarefa' tarefa.pk %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i> Deletar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="badge prioridade-{{ tarefa.prioridade }}">
+                        {{ tarefa.get_prioridade_display }}
+                    </span>
+                    <span class="badge status-{{ tarefa.status }}">
+                        {{ tarefa.get_status_display }}
+                    </span>
+                    {% if tarefa.concluida %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check"></i> Concluída
+                    </span>
+                    {% endif %}
+                </div>
+
+                {% if tarefa.descricao %}
+                <div class="mb-3">
+                    <h6>Descrição:</h6>
+                    <p>{{ tarefa.descricao|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    {% if tarefa.projeto %}
+                    <div class="col-md-6 mb-2">
+                        <strong>Projeto:</strong>
+                        <a href="{% url 'detalhes_projeto' tarefa.projeto.pk %}">
+                            <span class="badge" style="background-color: {{ tarefa.projeto.cor }};">
+                                {{ tarefa.projeto.nome }}
+                            </span>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if tarefa.data_vencimento %}
+                    <div class="col-md-6 mb-2">
+                        <strong>Vencimento:</strong>
+                        <span class="{% if tarefa.esta_atrasada %}text-danger{% endif %}">
+                            {{ tarefa.data_vencimento }}
+                            {% if tarefa.esta_atrasada %}
+                                <i class="fas fa-exclamation-triangle"></i>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <div class="col-md-6 mb-2">
+                        <strong>Criada em:</strong> {{ tarefa.criado_em|date:"d/m/Y H:i" }}
+                    </div>
+
+                    {% if tarefa.concluida_em %}
+                    <div class="col-md-6 mb-2">
+                        <strong>Concluída em:</strong> {{ tarefa.concluida_em|date:"d/m/Y H:i" }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Comentários -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-comments"></i> Comentários</h5>
+            </div>
+            <div class="card-body">
+                {% if comentarios %}
+                    {% for comentario in comentarios %}
+                    <div class="mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ comentario.usuario.username }}</strong>
+                            <small class="text-muted">{{ comentario.criado_em|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <p class="mb-0 mt-2">{{ comentario.texto|linebreaks }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Nenhum comentário ainda.</p>
+                {% endif %}
+
+                <form method="post" class="mt-3">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form_comentario.texto }}
+                    </div>
+                    <button type="submit" name="comentario" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Adicionar Comentário
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Anexos -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-paperclip"></i> Anexos</h5>
+            </div>
+            <div class="card-body">
+                {% if anexos %}
+                    <ul class="list-group list-group-flush">
+                        {% for anexo in anexos %}
+                        <li class="list-group-item">
+                            <a href="{{ anexo.arquivo.url }}" target="_blank">
+                                <i class="fas fa-file"></i> {{ anexo.nome }}
+                            </a>
+                            <br>
+                            <small class="text-muted">
+                                Por {{ anexo.enviado_por.username }} em {{ anexo.enviado_em|date:"d/m/Y" }}
+                            </small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Nenhum anexo.</p>
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data" class="mt-3">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form_anexo.nome }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_anexo.arquivo }}
+                    </div>
+                    <button type="submit" name="anexo" class="btn btn-primary btn-sm">
+                        <i class="fas fa-upload"></i> Enviar Anexo
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'lista_tarefas' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Voltar para Lista
+    </a>
+</div>
+{% endblock %}

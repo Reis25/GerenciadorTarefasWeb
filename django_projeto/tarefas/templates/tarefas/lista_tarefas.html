@@ -1,0 +1,156 @@
+{% extends 'tarefas/base.html' %}
+
+{% block title %}Tarefas - Gerenciador de Tarefas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-list"></i> Minhas Tarefas</h2>
+    <a href="{% url 'criar_tarefa' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nova Tarefa
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                {{ form.busca.label_tag }}
+                {{ form.busca }}
+            </div>
+            <div class="col-md-3">
+                {{ form.prioridade.label_tag }}
+                {{ form.prioridade }}
+            </div>
+            <div class="col-md-3">
+                {{ form.status.label_tag }}
+                {{ form.status }}
+            </div>
+            <div class="col-md-3">
+                {{ form.projeto.label_tag }}
+                {{ form.projeto }}
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <a href="{% url 'lista_tarefas' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Tarefas -->
+{% if tarefas %}
+    <div class="row">
+        {% for tarefa in tarefas %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">
+                            <a href="{% url 'detalhes_tarefa' tarefa.pk %}" class="text-decoration-none">
+                                {{ tarefa.titulo }}
+                            </a>
+                        </h5>
+                        <div class="form-check">
+                            <input class="form-check-input tarefa-toggle" type="checkbox"
+                                   data-id="{{ tarefa.pk }}"
+                                   {% if tarefa.concluida %}checked{% endif %}>
+                        </div>
+                    </div>
+
+                    {% if tarefa.descricao %}
+                    <p class="card-text text-muted">
+                        {{ tarefa.descricao|truncatewords:20 }}
+                    </p>
+                    {% endif %}
+
+                    <div class="mb-2">
+                        <span class="badge prioridade-{{ tarefa.prioridade }}">
+                            {{ tarefa.get_prioridade_display }}
+                        </span>
+                        <span class="badge status-{{ tarefa.status }}">
+                            {{ tarefa.get_status_display }}
+                        </span>
+                        {% if tarefa.projeto %}
+                        <span class="badge" style="background-color: {{ tarefa.projeto.cor }};">
+                            {{ tarefa.projeto.nome }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if tarefa.data_vencimento %}
+                    <p class="mb-2">
+                        <small class="{% if tarefa.esta_atrasada %}text-danger{% else %}text-muted{% endif %}">
+                            <i class="fas fa-calendar"></i>
+                            {% if tarefa.esta_atrasada %}
+                                Atrasada desde {{ tarefa.data_vencimento }}
+                            {% else %}
+                                Vence em {{ tarefa.data_vencimento }}
+                            {% endif %}
+                        </small>
+                    </p>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <small class="text-muted">
+                            {{ tarefa.criado_em|date:"d/m/Y" }}
+                        </small>
+                        <div>
+                            <a href="{% url 'editar_tarefa' tarefa.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'deletar_tarefa' tarefa.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+            <h4>Nenhuma tarefa encontrada</h4>
+            <p class="text-muted">Comece criando sua primeira tarefa!</p>
+            <a href="{% url 'criar_tarefa' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Criar Tarefa
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.tarefa-toggle').change(function() {
+        const tarefaId = $(this).data('id');
+        const checkbox = $(this);
+
+        $.ajax({
+            url: `/tarefas/${tarefaId}/toggle/`,
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(data) {
+                if (data.success) {
+                    location.reload();
+                }
+            },
+            error: function() {
+                checkbox.prop('checked', !checkbox.prop('checked'));
+                alert('Erro ao atualizar tarefa');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
